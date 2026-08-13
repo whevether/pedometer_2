@@ -1,0 +1,25 @@
+name: pedometer_pro_example
+description: Demonstrates how to use the pedometer_pro plugin.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.4 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  permission_handler: ^13.0.1
+  pedometer_pro:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  config:
+    enable-swift-package-manager: true

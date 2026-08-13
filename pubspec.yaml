@@ -1,9 +1,10 @@
-name: pedometer_2
+name: pedometer_pro
 description: Pedometer & Step Detection. Get step count in a timeRange & stream live steps.
-version: 5.0.4
+version: 0.1.0
 
-repository: https://github.com/Flucadetena/pedometer_2
-issue_tracker: https://github.com/Flucadetena/pedometer_2/issues
+repository: https://github.com/whevether/pedometer_2
+issue_tracker: https://github.com/whevether/pedometer_2/issues
+homepage: https://pub.dev/packages/pedometer_pro
 
 topics:
   - pedometer
@@ -31,7 +32,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.keep.pedometer_2
-        pluginClass: Pedometer_2Plugin
+        package: com.keep.pedometer_pro
+        pluginClass: PedometerProPlugin
       ios:
-        pluginClass: Pedometer_2Plugin
+        pluginClass: PedometerProPlugin

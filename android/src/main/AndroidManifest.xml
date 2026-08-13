@@ -1,3 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.keep.pedometer_2">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.keep.pedometer_pro">
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.stepdetector" android:required="false" />
 </manifest>

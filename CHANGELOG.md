@@ -1,15 +1,11 @@
+## 0.1.0
 
-## 5.0.4
+* iOS supports both CocoaPods and Swift Package Manager; the example app uses Swift Package Manager.
+* Renamed the package to `pedometer_pro` (Dart, Android, and iOS).
+* Android `getStepCount` now falls back to `TYPE_STEP_COUNTER` when Google Play Services / Recording API is unavailable (Xiaomi, OPPO, vivo, and other devices without GMS).
+* Added an example app.
+* Removed donation links from the documentation.
+* Pub.dev listing: https://pub.dev/packages/pedometer_pro
+* Repository: https://github.com/whevether/pedometer_2
 
-* Fixed issue Android breaking when Play Services version was to low. [Issue #4](https://github.com/Flucadetena/pedometer_2/issues/4) thanks to [@GwonHyeok](https://github.com/GwonHyeok)
-
-## 5.0.3
-
-* Improved file formatting
-
-## 5.0.2
-
-* Updated dependencies.
-* Added support to query steps "from:to" date on Android. Not only from last boot.
-* Added example for alternative to get step count stream from on Android.
-* Improved instructions to setup and examples to use.
+See [CHANGELOG_zh.md](CHANGELOG_zh.md) for Chinese.
