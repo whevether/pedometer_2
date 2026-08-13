@@ -30,6 +30,37 @@ import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+fun hasLocalRecording(context: Context): Boolean {
+    val status = try {
+        GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
+            context,
+            LocalRecordingClient.LOCAL_RECORDING_CLIENT_STEPS_MIN_VERSION_CODE
+        )
+    } catch (e: Exception) {
+        Log.d(TAG, "Play services check failed: $e")
+        ConnectionResult.SERVICE_MISSING
+    }
+    return status == ConnectionResult.SUCCESS
+}
+
+fun ensureRecordingSubscription(context: Context) {
+    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION)
+        != PackageManager.PERMISSION_GRANTED
+    ) {
+        return
+    }
+    if (!hasLocalRecording(context)) {
+        return
+    }
+    try {
+        FitnessLocal.getLocalRecordingClient(context)
+            .subscribe(LocalDataType.TYPE_STEP_COUNT_DELTA)
+            .addOnFailureListener { e -> Log.d(TAG, "subscribe failed: $e") }
+    } catch (e: Exception) {
+        Log.d(TAG, "subscribe unavailable: $e")
+    }
+}
+
 fun getSteps(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, startTime: ZonedDateTime, endTime: ZonedDateTime, result: MethodChannel.Result) {
 
     val context = flutterPluginBinding.applicationContext
@@ -40,18 +71,19 @@ fun getSteps(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, startTime
         return
     }
 
-    val hasMinPlayServices: Int = try {
-        GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
-            context,
-            LocalRecordingClient.LOCAL_RECORDING_CLIENT_MIN_VERSION_CODE
-        )
-    } catch (e: Exception) {
-        Log.d(TAG, "Play services check failed: $e")
-        ConnectionResult.SERVICE_MISSING
+    HealthConnectSteps.read(context, startTime, endTime, result) {
+        getStepsFromRecordingOrSensor(context, startTime, endTime, result)
     }
+}
 
-    if (hasMinPlayServices != ConnectionResult.SUCCESS) {
-        Log.d(TAG, "GMS unavailable ($hasMinPlayServices), falling back to TYPE_STEP_COUNTER")
+private fun getStepsFromRecordingOrSensor(
+    context: Context,
+    startTime: ZonedDateTime,
+    endTime: ZonedDateTime,
+    result: MethodChannel.Result
+) {
+    if (!hasLocalRecording(context)) {
+        Log.d(TAG, "GMS unavailable, falling back to TYPE_STEP_COUNTER")
         getStepsFromSensor(context, startTime, endTime, result)
         return
     }
@@ -66,7 +98,14 @@ fun getSteps(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, startTime
                         val deferred = GlobalScope.async { readLocalSteps(startTime, endTime, localRecordingClient) }
                         val steps = runBlocking { deferred.await() }
                         Log.d(TAG, "result: $steps")
-                        result.success(steps)
+                        // Local Recording only stores steps after this app subscribes.
+                        // A successful empty read is not Google Fit / OEM health history.
+                        if (steps == 0 && rangeIncludesNow(startTime, endTime)) {
+                            Log.d(TAG, "Recording empty for current window, falling back to TYPE_STEP_COUNTER")
+                            getStepsFromSensor(context, startTime, endTime, result)
+                        } else {
+                            result.success(steps)
+                        }
                     } catch (e: Exception) {
                         Log.d(TAG, "Recording read failed, falling back to sensor: $e")
                         getStepsFromSensor(context, startTime, endTime, result)
@@ -79,6 +118,13 @@ fun getSteps(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, startTime
         Log.d(TAG, "Recording API unavailable, falling back to sensor: $e")
         getStepsFromSensor(context, startTime, endTime, result)
     }
+}
+
+internal fun rangeIncludesNow(startTime: ZonedDateTime, endTime: ZonedDateTime): Boolean {
+    val now = System.currentTimeMillis()
+    val start = startTime.toInstant().toEpochMilli()
+    val end = endTime.toInstant().toEpochMilli()
+    return start < now && end >= now - 2000
 }
 
 fun getStepsFromSensor(
@@ -100,32 +146,53 @@ fun getStepsFromSensor(
 
     val delivered = AtomicBoolean(false)
     val handler = Handler(Looper.getMainLooper())
+    var best = 0
+    var settlePosted = false
+
+    fun finish(sinceBoot: Int) {
+        val bootTimeMillis = System.currentTimeMillis() - SystemClock.elapsedRealtime()
+        val rangeStart = startTime.toInstant().toEpochMilli()
+        val rangeEnd = endTime.toInstant().toEpochMilli()
+        val now = System.currentTimeMillis()
+
+        if (rangeEnd <= bootTimeMillis || rangeStart >= now) {
+            Log.d(TAG, "sensor fallback: no overlap with since-boot window, returning 0")
+            result.success(0)
+            return
+        }
+
+        Log.d(TAG, "sensor fallback sinceBoot=$sinceBoot bootTime=$bootTimeMillis")
+        result.success(sinceBoot)
+    }
 
     lateinit var listener: SensorEventListener
     listener = object : SensorEventListener {
         override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
 
         override fun onSensorChanged(event: SensorEvent) {
+            val value = event.values[0].toInt()
+            if (value > best) {
+                best = value
+            }
+            // Samsung often emits 0 first, then the real since-boot total.
+            if (value == 0 && !settlePosted) {
+                settlePosted = true
+                handler.postDelayed({
+                    if (!delivered.compareAndSet(false, true)) {
+                        return@postDelayed
+                    }
+                    handler.removeCallbacksAndMessages(null)
+                    sensorManager.unregisterListener(listener)
+                    finish(best)
+                }, 500)
+                return
+            }
             if (!delivered.compareAndSet(false, true)) {
                 return
             }
             handler.removeCallbacksAndMessages(null)
             sensorManager.unregisterListener(this)
-
-            val sinceBoot = event.values[0].toInt()
-            val bootTimeMillis = System.currentTimeMillis() - SystemClock.elapsedRealtime()
-            val rangeStart = startTime.toInstant().toEpochMilli()
-            val rangeEnd = endTime.toInstant().toEpochMilli()
-            val now = System.currentTimeMillis()
-
-            if (rangeEnd <= bootTimeMillis || rangeStart >= now) {
-                Log.d(TAG, "sensor fallback: no overlap with since-boot window, returning 0")
-                result.success(0)
-                return
-            }
-
-            Log.d(TAG, "sensor fallback sinceBoot=$sinceBoot bootTime=$bootTimeMillis")
-            result.success(sinceBoot)
+            finish(best)
         }
     }
 
@@ -146,30 +213,41 @@ fun getStepsFromSensor(
     handler.postDelayed({
         if (delivered.compareAndSet(false, true)) {
             sensorManager.unregisterListener(listener)
-            result.error(
-                "1",
-                "StepCount sensor timeout",
-                "No reading from TYPE_STEP_COUNTER within 3 seconds"
-            )
+            if (best > 0) {
+                finish(best)
+            } else {
+                result.error(
+                    "1",
+                    "StepCount sensor timeout",
+                    "No reading from TYPE_STEP_COUNTER within 5 seconds"
+                )
+            }
         }
-    }, 3000)
+    }, 5000)
 }
 
 suspend fun readLocalSteps(startTime: ZonedDateTime, endTime: ZonedDateTime, localRecordingClient: LocalRecordingClient): Int {
     Log.d(TAG, "readRequest:")
+    // Read raw deltas instead of bucketByTime(1, DAYS). A "today" range is
+    // shorter than one day, so day buckets often come back empty even when
+    // the subscription has already recorded steps.
     val readRequest = LocalDataReadRequest.Builder()
-            .aggregate(LocalDataType.TYPE_STEP_COUNT_DELTA)
-            .bucketByTime(1, TimeUnit.DAYS).setTimeRange(startTime.toEpochSecond(), endTime.toEpochSecond(), TimeUnit.SECONDS).build()
+            .read(LocalDataType.TYPE_STEP_COUNT_DELTA)
+            .setTimeRange(startTime.toEpochSecond(), endTime.toEpochSecond(), TimeUnit.SECONDS)
+            .build()
     Log.d(TAG, "readRequest: $readRequest")
 
     val response = localRecordingClient.readData(readRequest).await()
     Log.d(TAG, "readLocalSteps: $response")
-    val buckets = response.buckets
-    Log.i(TAG, "buckets-Size: ${buckets.size}")
-
+    val dataSets = if (response.buckets.isNotEmpty()) {
+        response.buckets.flatMap { it.dataSets }
+    } else {
+        response.dataSets
+    }
+    Log.i(TAG, "dataSets-Size: ${dataSets.size} buckets-Size: ${response.buckets.size}")
 
     var steps = 0
-    for (dataSet in buckets.flatMap { it.dataSets }) {
+    for (dataSet in dataSets) {
         steps += aggregatedSteps(dataSet)
     }
     Log.d(TAG, "readLocalSteps: $steps")

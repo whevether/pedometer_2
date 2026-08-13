@@ -22,10 +22,10 @@ Repository: [https://github.com/whevether/pedometer_2](https://github.com/whevet
 
 ## Android data sources
 
-| Capability | With Google Play Services | Without GMS (Xiaomi / OPPO / vivo, etc.) |
+| Capability | Typical phones (Play Store + Health Connect) | Without GMS / no Health Connect |
 | --- | --- | --- |
 | Real-time `stepCountStream` / `pedestrianStatusStream` | Hardware `TYPE_STEP_COUNTER` / `TYPE_STEP_DETECTOR` | Same sensors — **supported** |
-| `getStepCount(from, to)` history | Recording API (~10 days) | Falls back to `TYPE_STEP_COUNTER` (**steps since last boot only**, cannot split by calendar day) |
+| `getStepCount(from, to)` history | **Health Connect** (Samsung Health, Google Fit, and other linked apps) | `TYPE_STEP_COUNTER` (**steps since last boot only**, cannot split by calendar day) |
 
 On aggressive OEM battery savers (Xiaomi / OPPO / vivo), background listeners may be killed. Use the streams in the foreground, and ask the user to disable battery optimization for the app if you need more reliable tracking.
 
@@ -89,9 +89,11 @@ This plugin supports **both CocoaPods and Swift Package Manager**. The example a
 <details open>
   <summary><b>Android</b></summary>
 
-- You do not need to add `ACTIVITY_RECOGNITION` to your Android manifest. It is merged from the plugin.
+- You do not need to add `ACTIVITY_RECOGNITION` or `health.READ_STEPS` to your Android manifest. They are merged from the plugin.
 - Requires **Android 10 (minSdk 29)**. Set this in `android/app/build.gradle` (or `.kts`).
 - Make sure AndroidX is enabled (already true on recent Flutter projects).
+- **Galaxy / Samsung Health history:** install [Health Connect](https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata) (required on Android 13, such as Galaxy S20). In Samsung Health, enable Health Connect and allow this app to read steps. `play-services-fitness` does **not** read Samsung Health.
+- Host apps should declare `androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE` on `MainActivity` (see the example app).
 
 </details>
 
@@ -141,12 +143,12 @@ This plugin supports **both CocoaPods and Swift Package Manager**. The example a
    <summary><b>Get step count</b></summary>
 
     - Request the total steps in a time range (`from` / `to`).
-    - If `from` or `to` is omitted, it defaults to the maximum recorded window: 7 days on iOS, 10 days on Android with GMS.
+    - If `from` or `to` is omitted, it defaults to the maximum recorded window: 7 days on iOS, 10 days on Android.
     - If the range is longer than the platform window, the result only covers that window.
         #### Behavior
-    - The first request after install may return `0`, because recording starts after permission is granted.
-    - Reinstalling the app also resets this to `0` the first time.
-    - With GMS, the number is close to Google Fit. Without GMS, Android returns steps **since last boot** only.
+    - On Android, history is read from **Health Connect** (Samsung Health and other linked apps). The first call may show a Health Connect permission sheet.
+    - `play-services-fitness` Local Recording is only this app's own log after subscribe, not vendor health-app history.
+    - If Health Connect is missing or empty, ranges that include "now" fall back to steps since last boot.
         #### Example:
         ```dart
         import 'package:pedometer_pro/pedometer_pro.dart';

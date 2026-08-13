@@ -3,18 +3,22 @@ import android.content.ContentValues.TAG
 import android.hardware.Sensor
 import android.util.Log
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.PluginRegistry
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
 
-class PedometerProPlugin: FlutterPlugin {
+class PedometerProPlugin: FlutterPlugin, ActivityAware {
   private lateinit var stepDetectionChannel: EventChannel
   private lateinit var stepCountChannel: EventChannel
   private lateinit var methodChannel: MethodChannel
+  private var activityBinding: ActivityPluginBinding? = null
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
       /// Create channels
@@ -25,12 +29,12 @@ class PedometerProPlugin: FlutterPlugin {
       /// Create handlers
       val stepDetectionHandler = SensorStreamHandler(flutterPluginBinding, Sensor.TYPE_STEP_DETECTOR)
       val stepCountHandler = SensorStreamHandler(flutterPluginBinding, Sensor.TYPE_STEP_COUNTER)
-      val methodChannelHandler = StepsMethodHandler(flutterPluginBinding)
+      val handler = StepsMethodHandler(flutterPluginBinding)
 
       /// Set handlers
       stepDetectionChannel.setStreamHandler(stepDetectionHandler)
       stepCountChannel.setStreamHandler(stepCountHandler)
-      methodChannel.setMethodCallHandler(methodChannelHandler)
+      methodChannel.setMethodCallHandler(handler)
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -39,6 +43,34 @@ class PedometerProPlugin: FlutterPlugin {
       methodChannel.setMethodCallHandler(null)
   }
 
+  override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+      activityBinding = binding
+      HealthConnectSteps.setActivity(binding.activity)
+      binding.addActivityResultListener(activityResultListener)
+  }
+
+  override fun onDetachedFromActivityForConfigChanges() {
+      detachActivity()
+  }
+
+  override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+      onAttachedToActivity(binding)
+  }
+
+  override fun onDetachedFromActivity() {
+      detachActivity()
+  }
+
+  private fun detachActivity() {
+      activityBinding?.removeActivityResultListener(activityResultListener)
+      activityBinding = null
+      HealthConnectSteps.setActivity(null)
+  }
+
+  private val activityResultListener =
+      PluginRegistry.ActivityResultListener { requestCode, resultCode, data ->
+          HealthConnectSteps.onActivityResult(requestCode, resultCode, data)
+      }
 }
 
 class StepsMethodHandler() : MethodChannel.MethodCallHandler {

@@ -55,6 +55,7 @@ android {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
         implementation 'com.google.android.gms:play-services-fitness:21.3.0'
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0'
+        implementation 'androidx.health.connect:connect-client:1.1.0'
     }
 
     testOptions {

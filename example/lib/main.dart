@@ -176,10 +176,12 @@ class _PedometerHomePageState extends State<PedometerHomePage> {
         children: [
           Text(
             Platform.isAndroid
-                ? 'Android with Google Play: getStepCount uses the Recording API '
-                    '(about $_historyDays days of history, including per-day totals). '
-                    'Without GMS (Xiaomi / OPPO / vivo): live streams still work; '
-                    'getStepCount falls back to TYPE_STEP_COUNTER (steps since last boot, no per-day split).'
+                ? 'Android history comes from Health Connect (Samsung Health / Google Fit / other apps). '
+                    'Galaxy phones: install Health Connect, open Samsung Health → Settings → Health Connect, '
+                    'and allow this app to read steps. '
+                    'play-services-fitness Local Recording is only this app\'s own log after subscribe, '
+                    'not Samsung Health. If Health Connect is empty, today falls back to TYPE_STEP_COUNTER '
+                    '(steps since last boot).'
                 : 'iOS: getStepCount reads CoreMotion history (about 7 days).',
             style: Theme.of(context).textTheme.bodyMedium,
           ),

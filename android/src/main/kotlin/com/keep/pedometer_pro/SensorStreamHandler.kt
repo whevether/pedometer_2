@@ -28,6 +28,9 @@ class SensorStreamHandler() : EventChannel.StreamHandler {
         if (sensor == null) {
             events!!.error("1", "$sensorName not available", "$sensorName is not available on this device")
         } else {
+            // Start Local Recording as soon as the live stream is used, so
+            // getStepCount can read this app's history later.
+            ensureRecordingSubscription(flutterPluginBinding.applicationContext)
             sensorEventListener = sensorEventListener(events!!)
             sensorManager!!.registerListener(sensorEventListener, sensor, SensorManager.SENSOR_DELAY_FASTEST)
         }

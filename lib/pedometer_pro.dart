@@ -131,10 +131,14 @@ class Pedometer {
   /// Throws an assertion error if [from] is after [to].
   ///
   /// In iOS the maximum number of days the system saves the step count is 7.
-  /// On Android with Google Play Services, the Recording API stores about 10 days.
-  /// Without Google Play Services (common on Xiaomi / OPPO / vivo in mainland China),
-  /// Android falls back to `TYPE_STEP_COUNTER` and can only return steps since the
-  /// last system boot — it cannot split that total by calendar day.
+  /// On Android, `getStepCount` reads **Health Connect** first (Samsung Health,
+  /// Google Fit, and other apps the user has linked). That is the source of
+  /// real multi-day history on Galaxy phones.
+  /// `play-services-fitness` Local Recording is only this app's own log after
+  /// subscribe — it is not Samsung Health / Google Fit history.
+  /// If Health Connect is missing or empty, ranges that include "now" fall back
+  /// to `TYPE_STEP_COUNTER` (steps since last boot). Without Google Play Services,
+  /// Android uses `TYPE_STEP_COUNTER` only and cannot split that total by day.
   /// If the time range is greater than the maximum number of days for each platform,
   /// the system will return all the steps saved (but will only represent 7/10 days).
   ///

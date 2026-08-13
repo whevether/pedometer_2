@@ -2,7 +2,7 @@
 
 [中文文档](README.md)
 
-Demonstrates step count, live streams, and the Android sensor fallback when Google Play Services is unavailable. On phones with Google Play, the example loads about 10 days of Recording API history (including per-day totals). iOS uses about 7 days.
+Demonstrates step count, live streams, and the Android sensor fallback when Google Play Services is unavailable. Android history is read from Health Connect (Samsung Health and other linked apps). iOS uses about 7 days.
 
 ```sh
 cd example

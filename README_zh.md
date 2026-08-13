@@ -22,10 +22,10 @@
 
 ## Android 数据源
 
-| 能力 | 有 Google Play 服务 | 无 GMS（小米 / OPPO / vivo 等） |
+| 能力 | 常见机型（Play 商店 + Health Connect） | 无 GMS / 无 Health Connect |
 | --- | --- | --- |
 | 实时 `stepCountStream` / `pedestrianStatusStream` | 硬件 `TYPE_STEP_COUNTER` / `TYPE_STEP_DETECTOR` | 同一套传感器，**可用** |
-| `getStepCount(from, to)` 历史查询 | Recording API（约 10 天） | 回退到 `TYPE_STEP_COUNTER`（**仅上次开机以来的累计步数**，无法按自然日拆分） |
+| `getStepCount(from, to)` 历史查询 | **Health Connect**（三星健康、Google Fit 及其他已授权应用） | `TYPE_STEP_COUNTER`（**仅上次开机以来的累计步数**，无法按自然日拆分） |
 
 小米 / OPPO / vivo 的省电策略可能杀掉后台监听。实时流建议在前台使用；若需要更稳定的统计，请引导用户关闭该应用的电池优化。
 
@@ -89,9 +89,11 @@ Android 和 iOS 都需要申请活动识别 / 运动权限。
 <details open>
   <summary><b>Android</b></summary>
 
-- 不必在应用 Manifest 里手写 `ACTIVITY_RECOGNITION`，插件会在构建时合并进去。
+- 不必在应用 Manifest 里手写 `ACTIVITY_RECOGNITION` 或 `health.READ_STEPS`，插件会在构建时合并进去。
 - 需要 **Android 10（minSdk 29）**。在 `android/app/build.gradle`（或 `.kts`）中设置。
 - 确保已启用 AndroidX（较新的 Flutter 工程默认已开启）。
+- **三星 / 三星健康历史：** 安装 [Health Connect](https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata)（Android 13 如 Galaxy S20 必须单独安装）。在三星健康里打开 Health Connect，并允许本应用读取步数。`play-services-fitness` **读不到**三星健康。
+- 宿主 App 的 `MainActivity` 需要声明 `androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE`（见 example）。
 
 </details>
 
@@ -141,12 +143,12 @@ Android 和 iOS 都需要申请活动识别 / 运动权限。
    <summary><b>查询步数</b></summary>
 
     - 按时间范围（`from` / `to`）查询总步数。
-    - 未传 `from` 或 `to` 时，默认取平台最大窗口：iOS 7 天，Android（有 GMS）10 天。
+    - 未传 `from` 或 `to` 时，默认取平台最大窗口：iOS 7 天，Android 10 天。
     - 查询区间超过窗口时，返回值只覆盖该窗口内的数据。
         #### 行为
-    - 安装并授权后第一次查询可能为 `0`，因为系统从授权后才开始记录。
-    - 卸载重装后第一次同样可能为 `0`。
-    - 有 GMS 时数值接近 Google Fit；无 GMS 时 Android 只能返回 **上次开机以来** 的步数。
+    - Android 的历史来自 **Health Connect**（三星健康及其他已授权应用）。第一次查询可能会弹出 Health Connect 授权页。
+    - `play-services-fitness` 的 Local Recording 只是本应用 subscribe 之后自己记的日志，不是厂商健康 App 的历史。
+    - 若没有 Health Connect 或其中没有数据，包含「当前时刻」的区间会回退到开机以来的步数。
         #### 示例：
         ```dart
         import 'package:pedometer_pro/pedometer_pro.dart';
