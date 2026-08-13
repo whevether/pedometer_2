@@ -1,4 +1,4 @@
-package com.example.pedometer_2
+package com.keep.pedometer_2
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel

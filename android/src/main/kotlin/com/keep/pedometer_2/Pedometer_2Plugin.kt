@@ -1,4 +1,4 @@
-package com.example.pedometer_2
+package com.keep.pedometer_2
 import android.content.ContentValues.TAG
 import android.hardware.Sensor
 import android.util.Log

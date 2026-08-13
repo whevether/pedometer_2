@@ -23,7 +23,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  plugin_platform_interface: ^2.1.8
 
 dev_dependencies:
   flutter_lints: ^6.0.0
@@ -32,7 +31,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.example.pedometer_2
+        package: com.keep.pedometer_2
         pluginClass: Pedometer_2Plugin
       ios:
         pluginClass: Pedometer_2Plugin

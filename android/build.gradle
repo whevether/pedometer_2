@@ -1,16 +1,16 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-group 'com.example.pedometer_2'
+group 'com.keep.pedometer_2'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = "2.2.20"
+    ext.kotlin_version = "2.4.10"
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.13.0'
+        classpath 'com.android.tools.build:gradle:9.3.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -23,14 +23,13 @@ allprojects {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
 
 android {
     if (project.android.hasProperty("namespace")) {
-        namespace 'com.example.pedometer_2'
+        namespace 'com.keep.pedometer_2'
     }
 
-    compileSdk 34
+    compileSdk 37
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -55,7 +54,7 @@ android {
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
         implementation 'com.google.android.gms:play-services-fitness:21.3.0'
-        implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2'
+        implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0'
     }
 
     testOptions {
