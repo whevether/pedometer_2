@@ -2,7 +2,7 @@
 
 [English](README_en.md)
 
-演示步数查询、实时流，以及 Android 在无 Google Play 服务时的传感器回退。
+演示步数查询、实时流，以及 Android 在无 Google Play 服务时的传感器回退。有 Google Play 的机型会查询 Recording API 的近 10 天历史（含按日明细）；iOS 为近 7 天。
 
 ```sh
 cd example

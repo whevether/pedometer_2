@@ -49,6 +49,9 @@ I recommend using [permission_handler](https://pub.dev/packages/permission_handl
 
 This plugin supports **both CocoaPods and Swift Package Manager**. The example app uses Swift Package Manager.
 
+- CocoaPods: `ios/pedometer_pro.podspec`
+- SwiftPM: `ios/pedometer_pro/Package.swift` and `ios/pedometer_pro/Sources/`
+
 1. In your `Info.plist`, located under `ios/Runner`, add this:
 
    ```xml

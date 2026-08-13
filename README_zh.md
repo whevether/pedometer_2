@@ -49,6 +49,9 @@ Android 和 iOS 都需要申请活动识别 / 运动权限。
 
 本插件同时支持 **CocoaPods 与 Swift Package Manager**。示例应用使用 Swift Package Manager。
 
+- CocoaPods：`ios/pedometer_pro.podspec`
+- SwiftPM：`ios/pedometer_pro/Package.swift` 与 `ios/pedometer_pro/Sources/`
+
 1. 在 `ios/Runner/Info.plist` 中加入：
 
    ```xml

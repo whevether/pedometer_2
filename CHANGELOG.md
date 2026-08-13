@@ -1,6 +1,6 @@
 ## 0.1.0
 
-* iOS supports both CocoaPods and Swift Package Manager; the example app uses Swift Package Manager.
+* iOS supports both CocoaPods and Swift Package Manager. The example app uses Swift Package Manager.
 * Renamed the package to `pedometer_pro` (Dart, Android, and iOS).
 * Android `getStepCount` now falls back to `TYPE_STEP_COUNTER` when Google Play Services / Recording API is unavailable (Xiaomi, OPPO, vivo, and other devices without GMS).
 * Added an example app.
