@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.description      = <<-DESC
 A Flutter plugin for step counting and pedestrian status on Android and iOS.
                        DESC
-  s.homepage         = 'https://github.com/whevether/pedometer_2'
+  s.homepage         = 'https://github.com/whevether/pedometer_pro'
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }

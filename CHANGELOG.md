@@ -7,6 +7,6 @@
 * Added an example app.
 * Removed donation links from the documentation.
 * Pub.dev listing: https://pub.dev/packages/pedometer_pro
-* Repository: https://github.com/whevether/pedometer_2
+* Repository: https://github.com/whevether/pedometer_pro
 
 See [CHANGELOG_zh.md](CHANGELOG_zh.md) for Chinese.

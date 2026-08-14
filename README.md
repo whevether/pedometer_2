@@ -16,7 +16,7 @@ This plugin allows you to get this info on both Android and iOS:
 
 Package: [https://pub.dev/packages/pedometer_pro](https://pub.dev/packages/pedometer_pro)
 
-Repository: [https://github.com/whevether/pedometer_2](https://github.com/whevether/pedometer_2)
+Repository: [https://github.com/whevether/pedometer_pro](https://github.com/whevether/pedometer_pro)
 
 <img height="500px" src="assets/example_preview.png"/>
 

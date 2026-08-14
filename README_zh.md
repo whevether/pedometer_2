@@ -16,7 +16,7 @@
 
 包地址：[https://pub.dev/packages/pedometer_pro](https://pub.dev/packages/pedometer_pro)
 
-仓库：[https://github.com/whevether/pedometer_2](https://github.com/whevether/pedometer_2)
+仓库：[https://github.com/whevether/pedometer_pro](https://github.com/whevether/pedometer_pro)
 
 <img height="500px" src="assets/example_preview.png"/>
 

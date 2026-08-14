@@ -7,6 +7,6 @@
 * 新增 example 示例应用。
 * 文档去掉打赏链接。
 * pub.dev：https://pub.dev/packages/pedometer_pro
-* 仓库：https://github.com/whevether/pedometer_2
+* 仓库：https://github.com/whevether/pedometer_pro
 
 英文版见 [CHANGELOG.md](CHANGELOG.md)。
